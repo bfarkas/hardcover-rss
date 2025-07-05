@@ -1,5 +1,10 @@
 FROM python:3.11-slim as builder
 
+# Add metadata labels
+LABEL org.opencontainers.image.source="https://github.com/hideki23/hardcover_rss"
+LABEL org.opencontainers.image.description="Hardcover RSS Service - Generate RSS feeds from Hardcover want-to-read lists"
+LABEL org.opencontainers.image.licenses="MIT"
+
 WORKDIR /app
 
 # Install system dependencies

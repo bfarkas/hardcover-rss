@@ -47,6 +47,29 @@ git remote add origin <your-github-repo-url>
 git push -u origin main
 ```
 
+### 4. Enable GitHub Actions
+
+1. Go to your repository on GitHub
+2. Navigate to **Settings** → **Actions** → **General**
+3. Enable "Allow all actions and reusable workflows"
+4. Save the changes
+
+### 5. Publish Docker Images
+
+The GitHub Actions workflow will automatically:
+- Build Docker images on every push to `main`
+- Publish images to GitHub Container Registry
+- Create versioned tags for releases
+
+To create a release:
+```bash
+# Create and push a version tag
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+This will trigger the workflow to build and publish `ghcr.io/yourusername/hardcover_rss:v1.0.0`
+
 ## Environment Setup for Users
 
 ### Quick Start

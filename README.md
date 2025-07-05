@@ -16,6 +16,8 @@ A service that provides RSS feeds for Hardcover.app "want to read" lists, simila
 
 ### Using Docker Compose (Recommended)
 
+#### Option 1: Using Pre-built Images (Fastest)
+
 1. Clone the repository:
 ```bash
 git clone <repository-url>
@@ -31,7 +33,29 @@ cp env.example .env
 # Get your token from https://hardcover.app/settings/api
 ```
 
-3. Start the service:
+3. Start the service with pre-built images:
+```bash
+./deploy.sh
+```
+
+#### Option 2: Building Locally
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd hardcover_rss
+```
+
+2. Set up your environment variables:
+```bash
+# Copy the example environment file
+cp env.example .env
+
+# Edit .env and add your Hardcover API token
+# Get your token from https://hardcover.app/settings/api
+```
+
+3. Build and start the service:
 ```bash
 docker-compose up -d
 ```
@@ -184,6 +208,38 @@ python -m uvicorn app.main:app --reload
 ### Testing
 
 The service includes health checks and error handling. You can test the API using the interactive documentation at `http://localhost:8000/docs`.
+
+## Docker Images
+
+Pre-built Docker images are available on GitHub Container Registry:
+
+```bash
+# Pull the latest image
+docker pull ghcr.io/hideki23/hardcover_rss:latest
+
+# Or use a specific version
+docker pull ghcr.io/hideki23/hardcover_rss:v1.0.0
+```
+
+### Available Tags
+
+- `latest` - Latest stable release
+- `main` - Latest commit on main branch
+- `v*` - Versioned releases (e.g., `v1.0.0`, `v1.1.0`)
+
+### Running with Docker Run
+
+```bash
+# Start Redis
+docker run -d --name redis redis:7-alpine
+
+# Start the service
+docker run -d --name hardcover-rss \
+  -p 8000:8000 \
+  -e HARDCOVER_API_TOKEN="your_token_here" \
+  -e REDIS_URL="redis://host.docker.internal:6379" \
+  ghcr.io/hideki23/hardcover_rss:latest
+```
 
 ## Architecture
 
