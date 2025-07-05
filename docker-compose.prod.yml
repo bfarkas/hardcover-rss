@@ -1,6 +1,6 @@
 services:
   hardcover-rss:
-    image: ghcr.io/hideki23/hardcover_rss:latest
+    image: ghcr.io/bfarkas/hardcover-rss:latest
     ports:
       - "8000:8000"
     environment:

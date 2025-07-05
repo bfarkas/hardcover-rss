@@ -214,18 +214,22 @@ The service includes health checks and error handling. You can test the API usin
 Pre-built Docker images are available on GitHub Container Registry:
 
 ```bash
-# Pull the latest image
-docker pull ghcr.io/hideki23/hardcover_rss:latest
+# Pull the latest image (recommended)
+docker pull ghcr.io/bfarkas/hardcover-rss:latest
 
 # Or use a specific version
-docker pull ghcr.io/hideki23/hardcover_rss:v1.0.0
+docker pull ghcr.io/bfarkas/hardcover-rss:v1.0.0
+
+# Or use the main branch
+docker pull ghcr.io/bfarkas/hardcover-rss:main
 ```
 
 ### Available Tags
 
-- `latest` - Latest stable release
+- `latest` - Latest stable release (same as main branch)
 - `main` - Latest commit on main branch
 - `v*` - Versioned releases (e.g., `v1.0.0`, `v1.1.0`)
+- `main-<sha>` - Specific commit builds
 
 ### Running with Docker Run
 
@@ -238,7 +242,7 @@ docker run -d --name hardcover-rss \
   -p 8000:8000 \
   -e HARDCOVER_API_TOKEN="your_token_here" \
   -e REDIS_URL="redis://host.docker.internal:6379" \
-  ghcr.io/hideki23/hardcover_rss:latest
+  ghcr.io/bfarkas/hardcover-rss:latest
 ```
 
 ## Architecture

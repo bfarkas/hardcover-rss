@@ -25,7 +25,7 @@ fi
 
 echo ""
 echo "🐳 Starting services with pre-built Docker images..."
-echo "   Using: ghcr.io/hideki23/hardcover_rss:latest"
+echo "   Using: ghcr.io/bfarkas/hardcover-rss:latest"
 
 # Use the production compose file
 docker-compose -f docker-compose.prod.yml up -d
