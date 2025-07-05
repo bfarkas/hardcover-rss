@@ -1,4 +1,4 @@
-FROM python:3.11-slim as builder
+FROM --platform=$BUILDPLATFORM python:3.11-slim as builder
 
 # Add metadata labels
 LABEL org.opencontainers.image.source="https://github.com/hideki23/hardcover_rss"
@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Debug: List installed packages
 RUN pip list | grep uvicorn
 
-FROM python:3.11-slim
+FROM --platform=$TARGETPLATFORM python:3.11-slim
 
 WORKDIR /app
 
