@@ -39,6 +39,9 @@ RUN useradd --create-home --shell /bin/bash app && \
     chown -R app:app /app
 USER app
 
+# Set environment variable to indicate we're running in Docker
+ENV DOCKER_CONTAINER=true
+
 # Expose port
 EXPOSE 8000
 

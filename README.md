@@ -272,6 +272,30 @@ The service provides several monitoring endpoints:
 3. **Redis connection**: Check Redis is running and accessible
 4. **Rate limiting**: The service includes delays between API calls
 
+### Redis Connectivity Issues
+
+If you encounter Redis connection problems:
+
+```bash
+# Test Redis connectivity
+./test-redis.sh
+
+# For Docker deployments, ensure Redis is running:
+docker-compose up -d redis
+
+# For local development, start Redis:
+docker run -d --name redis redis:7-alpine
+
+# Check if Redis is accessible:
+redis-cli ping
+```
+
+**Common Redis URL patterns:**
+- **Docker Compose**: `redis://redis:6379`
+- **Local development**: `redis://localhost:6379`
+- **Docker with host Redis**: `redis://host.docker.internal:6379`
+- **Remote Redis**: `redis://your-redis-server:6379`
+
 ### Logs
 
 Check the service logs:
