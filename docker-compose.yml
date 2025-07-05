@@ -1,0 +1,28 @@
+services:
+  hardcover-rss:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - HARDCOVER_API_TOKEN=${HARDCOVER_API_TOKEN}
+      - HARDCOVER_API_URL=https://api.hardcover.app/v1/graphql
+      - REFRESH_INTERVAL=3600
+      - CACHE_TTL=1800
+      - LOG_LEVEL=INFO
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    volumes:
+      - ./config:/app/config
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+volumes:
+  redis_data: 
