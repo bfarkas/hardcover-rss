@@ -73,20 +73,40 @@ class RSSFeedGenerator:
                 fe.dc.dc_subject("to-read")
                 
                 # Add custom tags for additional metadata
-                if book.isbn:
-                    fe.dc.dc_identifier(book.isbn)
                 if book.published_year:
                     fe.dc.dc_date(f"{book.published_year}-01-01")
                 
-                # Add custom fields for book_id, author_name, isbn
-                if book.book_id:
-                    fe.dc.dc_source(book.book_id)  # Use dc:source for book_id
-                if book.author_name:
-                    fe.dc.dc_contributor(book.author_name)  # Use dc:contributor for author_name
-                if book.isbn:
-                    fe.dc.dc_identifier(book.isbn)  # Use dc:identifier for ISBN
+                # Add custom elements to match Goodreads structure
+                # We'll need to post-process the XML to add these custom tags
+                # For now, we'll store them in the feed entry for later processing
+                fe._custom_data = {
+                    'book_id': book.book_id,
+                    'book_image_url': book.cover_image_url,
+                    'book_small_image_url': book.cover_image_url,
+                    'book_medium_image_url': book.cover_image_url,
+                    'book_large_image_url': book.cover_image_url,
+                    'book_description': book.book_description,
+                    'author_name': book.author_name,
+                    'isbn': book.isbn,
+                    'user_name': user_book_list.user.display_name,
+                    'user_rating': '0',
+                    'user_read_at': '',
+                    'user_date_added': book.date_added.strftime('%a, %d %b %Y %H:%M:%S %z') if book.date_added else datetime.now().strftime('%a, %d %b %Y %H:%M:%S %z'),
+                    'user_date_created': book.date_added.strftime('%a, %d %b %Y %H:%M:%S %z') if book.date_added else datetime.now().strftime('%a, %d %b %Y %H:%M:%S %z'),
+                    'user_shelves': 'to-read',
+                    'user_review': '',
+                    'average_rating': f"{book.average_rating:.2f}" if book.average_rating else "0.00",
+                    'book_published': str(book.published_year) if book.published_year else '',
+                    'num_pages': str(book.page_count) if book.page_count else ''
+                }
             
-            return fg.rss_str(pretty=True).decode('utf-8')
+            # Generate the RSS XML
+            rss_xml = fg.rss_str(pretty=True).decode('utf-8')
+            
+            # Post-process to add custom elements
+            rss_xml = self._add_custom_elements(rss_xml, fg.entry())
+            
+            return rss_xml
             
         except Exception as e:
             logger.error(f"Error generating RSS feed for {user_book_list.user.username}: {e}")
@@ -179,17 +199,80 @@ class RSSFeedGenerator:
         # Review (empty for want to read)
         description_parts.append("review: ")
         
-        # Additional fields: book_id, author_name, isbn
-        if book.book_id:
-            description_parts.append(f"book_id: {book.book_id}")
-        if book.author_name:
-            description_parts.append(f"author_name: {book.author_name}")
-        if book.isbn:
-            description_parts.append(f"isbn: {book.isbn}")
-        
         return " ".join(description_parts)
 
     def _format_date(self, dt: datetime) -> str:
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
         return dt.isoformat() 
+
+    def _add_custom_elements(self, rss_xml: str, entries) -> str:
+        """Add custom elements to the RSS XML to match Goodreads structure"""
+        import re
+        
+        # Split the XML into parts
+        parts = rss_xml.split('</item>')
+        
+        if len(parts) <= 1:
+            return rss_xml
+        
+        # Process each item
+        for i, entry in enumerate(entries):
+            if hasattr(entry, '_custom_data') and entry._custom_data:
+                custom_data = entry._custom_data
+                
+                # Create custom elements XML with proper indentation (2 spaces to match RSS structure)
+                custom_elements = []
+                
+                if custom_data.get('book_id'):
+                    custom_elements.append(f'  <book_id>{custom_data["book_id"]}</book_id>')
+                
+                if custom_data.get('book_image_url'):
+                    custom_elements.append(f'  <book_image_url><![CDATA[{custom_data["book_image_url"]}]]></book_image_url>')
+                    custom_elements.append(f'  <book_small_image_url><![CDATA[{custom_data["book_small_image_url"]}]]></book_small_image_url>')
+                    custom_elements.append(f'  <book_medium_image_url><![CDATA[{custom_data["book_medium_image_url"]}]]></book_medium_image_url>')
+                    custom_elements.append(f'  <book_large_image_url><![CDATA[{custom_data["book_large_image_url"]}]]></book_large_image_url>')
+                
+                if custom_data.get('book_description'):
+                    custom_elements.append(f'  <book_description><![CDATA[{custom_data["book_description"]}]]></book_description>')
+                
+                if custom_data.get('book_id'):
+                    custom_elements.append(f'  <book id="{custom_data["book_id"]}">')
+                    if custom_data.get('num_pages'):
+                        custom_elements.append(f'    <num_pages>{custom_data["num_pages"]}</num_pages>')
+                    custom_elements.append('  </book>')
+                
+                if custom_data.get('author_name'):
+                    custom_elements.append(f'  <author_name>{custom_data["author_name"]}</author_name>')
+                
+                if custom_data.get('isbn'):
+                    custom_elements.append(f'  <isbn>{custom_data["isbn"]}</isbn>')
+                
+                if custom_data.get('user_name'):
+                    custom_elements.append(f'  <user_name>{custom_data["user_name"]}</user_name>')
+                
+                custom_elements.append(f'  <user_rating>{custom_data.get("user_rating", "0")}</user_rating>')
+                custom_elements.append(f'  <user_read_at>{custom_data.get("user_read_at", "")}</user_read_at>')
+                
+                if custom_data.get('user_date_added'):
+                    custom_elements.append(f'  <user_date_added><![CDATA[{custom_data["user_date_added"]}]]></user_date_added>')
+                
+                if custom_data.get('user_date_created'):
+                    custom_elements.append(f'  <user_date_created><![CDATA[{custom_data["user_date_created"]}]]></user_date_created>')
+                
+                custom_elements.append(f'  <user_shelves>{custom_data.get("user_shelves", "to-read")}</user_shelves>')
+                custom_elements.append(f'  <user_review>{custom_data.get("user_review", "")}</user_review>')
+                
+                if custom_data.get('average_rating'):
+                    custom_elements.append(f'  <average_rating>{custom_data["average_rating"]}</average_rating>')
+                
+                if custom_data.get('book_published'):
+                    custom_elements.append(f'  <book_published>{custom_data["book_published"]}</book_published>')
+                
+                # Insert custom elements before </item> with proper spacing
+                if i < len(parts) - 1:  # Not the last part
+                    # Add custom elements with proper spacing and indentation
+                    parts[i] = parts[i] + '\n' + '\n'.join(custom_elements)
+        
+        # Rejoin the XML
+        return '</item>'.join(parts) 
