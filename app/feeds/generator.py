@@ -69,7 +69,7 @@ class RSSFeedGenerator:
                 fe.updated(datetime.now(timezone.utc))
                 
                 # Add custom fields similar to Goodreads
-                fe.dc.dc_creator(book.author)
+                fe.dc.dc_creator(book.author_name or book.author)
                 fe.dc.dc_subject("to-read")
                 
                 # Add custom tags for additional metadata
@@ -77,6 +77,14 @@ class RSSFeedGenerator:
                     fe.dc.dc_identifier(book.isbn)
                 if book.published_year:
                     fe.dc.dc_date(f"{book.published_year}-01-01")
+                
+                # Add custom fields for book_id, author_name, isbn
+                if book.book_id:
+                    fe.dc.dc_source(book.book_id)  # Use dc:source for book_id
+                if book.author_name:
+                    fe.dc.dc_contributor(book.author_name)  # Use dc:contributor for author_name
+                if book.isbn:
+                    fe.dc.dc_identifier(book.isbn)  # Use dc:identifier for ISBN
             
             return fg.rss_str(pretty=True).decode('utf-8')
             
@@ -94,16 +102,18 @@ class RSSFeedGenerator:
         # Book ID (similar to Goodreads)
         description_parts.append(f"{book.id}")
         
-        # Book description
-        if book.description:
-            description_parts.append(f"<![CDATA[{book.description}]]>")
+        # Book description (use book_description if available, fallback to description)
+        book_desc = book.book_description or book.description
+        if book_desc:
+            description_parts.append(f"<![CDATA[{book_desc}]]>")
         
         # Book metadata
         if book.page_count:
             description_parts.append(f"{book.page_count}")
         
-        # Author
-        description_parts.append(f"{book.author}")
+        # Author (use author_name if available, fallback to author)
+        author_name = book.author_name or book.author
+        description_parts.append(f"{author_name}")
         
         # ISBN
         if book.isbn:
@@ -133,8 +143,8 @@ class RSSFeedGenerator:
         # Book title again (Goodreads format)
         description_parts.append(f"{book.title}")
         
-        # Author again
-        description_parts.append(f"author: {book.author}")
+        # Author again (use author_name if available)
+        description_parts.append(f"author: {author_name}")
         
         # User name
         description_parts.append(f"name: {user.display_name}")
@@ -169,7 +179,15 @@ class RSSFeedGenerator:
         # Review (empty for want to read)
         description_parts.append("review: ")
         
-        return " ".join(description_parts) 
+        # Additional fields: book_id, author_name, isbn
+        if book.book_id:
+            description_parts.append(f"book_id: {book.book_id}")
+        if book.author_name:
+            description_parts.append(f"author_name: {book.author_name}")
+        if book.isbn:
+            description_parts.append(f"isbn: {book.isbn}")
+        
+        return " ".join(description_parts)
 
     def _format_date(self, dt: datetime) -> str:
         if dt.tzinfo is None:

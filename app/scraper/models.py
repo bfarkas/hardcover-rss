@@ -8,8 +8,11 @@ class Book(BaseModel):
     id: str
     title: str
     author: str
+    book_id: Optional[str] = None  # Internal Hardcover ID
+    book_description: Optional[str] = None  # Book description (renamed from description)
+    author_name: Optional[str] = None  # Name of the author
     cover_image_url: Optional[str] = None
-    description: Optional[str] = None
+    description: Optional[str] = None  # Keep for backward compatibility
     isbn: Optional[str] = None
     published_year: Optional[int] = None
     page_count: Optional[int] = None

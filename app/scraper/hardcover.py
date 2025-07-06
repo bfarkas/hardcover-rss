@@ -206,20 +206,32 @@ class HardcoverAPI:
                     username=username,
                     display_name=username
                 )
+                # Parse books from the letterbooks array
                 books = []
-                for entry in books_list:
-                    book_info = entry["book"] if isinstance(entry, dict) and "book" in entry else entry
+                for book_entry in books_list:
+                    book_data = book_entry.get("book", {})
+                    
+                    # Extract author name from contributions
+                    author_name = ""
+                    contributions = book_data.get("contributions", [])
+                    if contributions:
+                        author_info = contributions[0].get("author", {})
+                        author_name = author_info.get("name", "")
+                    
                     book = Book(
-                        id=str(book_info.get("id")),
-                        title=book_info.get("title", ""),
-                        author=book_info.get("author", ""),
-                        cover_image_url=book_info.get("cover", {}).get("url") if book_info.get("cover") else None,
-                        description=book_info.get("description"),
-                        isbn=book_info.get("isbn"),
-                        published_year=book_info.get("release_year"),
-                        page_count=book_info.get("pages"),
-                        average_rating=float(book_info["rating"]) if book_info.get("rating") else None,
-                        date_added=None,
+                        id=str(book_data.get("id", "")),
+                        title=book_data.get("title", ""),
+                        author=author_name,  # Use extracted author name
+                        book_id=str(book_data.get("id", "")),  # Internal Hardcover ID
+                        book_description=book_data.get("description", ""),  # Book description
+                        author_name=author_name,  # Name of the author
+                        cover_image_url=book_data.get("image", {}).get("url") if book_data.get("image") else None,
+                        description=book_data.get("description", ""),  # Keep for backward compatibility
+                        isbn=book_data.get("isbn"),  # ISBN if available
+                        published_year=book_data.get("releaseYear"),
+                        page_count=book_data.get("pages"),
+                        average_rating=float(book_data.get("rating", 0)) if book_data.get("rating") else None,
+                        date_added=datetime.now(),  # Use current time as fallback
                         user_rating=None,
                         user_review=None
                     )
