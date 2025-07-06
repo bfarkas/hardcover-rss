@@ -20,21 +20,30 @@ class HardcoverAPI:
         }
     
     async def get_user_want_to_read(self, username: str) -> Optional[UserBookList]:
-        """Fetch a user's 'want to read' list"""
+        """Fetch a user's 'want to read' list from the correct bookshelf"""
         try:
-            # GraphQL query to get user's want to read books
+            # GraphQL query to get user's want to read bookshelf and its books
             query = """
             query GetUserWantToRead($username: citext!) {
                 users(where: {username: {_eq: $username}}, limit: 1) {
                     id
                     username
-                    user_books(order_by: {created_at: desc}) {
+                    bookshelves(where: {slug: {_eq: "want-to-read"}}, limit: 1) {
                         id
-                        created_at
-                        book {
+                        slug
+                        name
+                        bookshelf_books(order_by: {created_at: desc}) {
                             id
-                            title
-                            description
+                            created_at
+                            book {
+                                id
+                                title
+                                description
+                                authors {
+                                    name
+                                }
+                                # Add more fields as needed
+                            }
                         }
                     }
                 }
@@ -75,25 +84,28 @@ class HardcoverAPI:
                     display_name=user_data.get("username", username)
                 )
                 
-                # Create Book objects
+                # Find the want-to-read bookshelf
                 books = []
-                for book_data in user_data.get("user_books", []):
-                    book_info = book_data.get("book", {})
-                    book = Book(
-                        id=str(book_info.get("id", book_data["id"])),
-                        title=book_info.get("title"),
-                        author=", ".join(a["name"] for a in book_info.get("authors", [])),
-                        cover_image_url=None,
-                        description=book_info.get("description"),
-                        isbn=None,
-                        published_year=None,
-                        page_count=None,
-                        average_rating=None,
-                        date_added=datetime.fromisoformat(book_data["created_at"].replace("Z", "+00:00")) if book_data.get("created_at") else None,
-                        user_rating=book_data.get("userRating"),
-                        user_review=book_data.get("userReview")
-                    )
-                    books.append(book)
+                bookshelves = user_data.get("bookshelves", [])
+                if bookshelves:
+                    bookshelf = bookshelves[0]
+                    for shelf_book in bookshelf.get("bookshelf_books", []):
+                        book_info = shelf_book.get("book", {})
+                        book = Book(
+                            id=str(book_info.get("id", shelf_book["id"])),
+                            title=book_info.get("title"),
+                            author=", ".join(a["name"] for a in book_info.get("authors", [])),
+                            cover_image_url=None,
+                            description=book_info.get("description"),
+                            isbn=None,
+                            published_year=None,
+                            page_count=None,
+                            average_rating=None,
+                            date_added=datetime.fromisoformat(shelf_book["created_at"].replace("Z", "+00:00")) if shelf_book.get("created_at") else None,
+                            user_rating=None,
+                            user_review=None
+                        )
+                        books.append(book)
                 
                 return UserBookList(user=user, books=books)
                 
