@@ -314,3 +314,34 @@ This project is licensed under the MIT License.
 3. Make your changes
 4. Add tests if applicable
 5. Submit a pull request 
+
+## Goodreads Hostname Impersonation
+
+To ensure your target application recognizes this service as a Goodreads RSS feed, the service must be accessible at a hostname containing `goodreads` (e.g., `goodreads`).
+
+**Important:**
+- The `extra_hosts` entry should be added to the target application's service in your `docker-compose.yml`, not to the `hardcover-rss` service itself.
+- This will map the hostname `goodreads` to the IP address of the `hardcover-rss` container, allowing the target application to resolve and connect to it as if it were Goodreads.
+
+### Example
+Suppose your target application is called `myapp` and your RSS service is `hardcover-rss`:
+
+```yaml
+services:
+  hardcover-rss:
+    # ... existing config ...
+
+  myapp:
+    # ... existing config ...
+    extra_hosts:
+      - "goodreads:hardcover-rss"
+```
+
+Or, if you want to map to a specific IP (e.g., when running outside Docker Compose networking):
+
+```yaml
+    extra_hosts:
+      - "goodreads:127.0.0.1"
+```
+
+This ensures that when your target application tries to access `http://goodreads:8000/list_rss/USERNAME`, it will be routed to your Hardcover RSS service. 
