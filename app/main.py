@@ -205,6 +205,11 @@ async def get_user_feed(username: str):
         logger.error(f"Error generating feed for {username}: {e}")
         raise HTTPException(status_code=500, detail="Failed to generate feed")
 
+@app.get("/list_rss/{username}")
+async def get_user_feed_goodreads(username: str):
+    """Goodreads-compatible RSS endpoint alias"""
+    return await get_user_feed(username)
+
 @app.post("/refresh/{username}")
 async def refresh_user_feed(username: str, background_tasks: BackgroundTasks):
     """Refresh a user's feed (clear cache and regenerate)"""
