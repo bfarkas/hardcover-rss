@@ -15,9 +15,6 @@ services:
     volumes:
       - ./config:/app/config
     restart: unless-stopped
-    container_name: goodreads-rss
-    extra_hosts:
-      - "goodreads:127.0.0.1"
 
   redis:
     image: redis:7-alpine
